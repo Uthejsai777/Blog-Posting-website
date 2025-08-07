@@ -1,0 +1,106 @@
+{% extends 'blog_app/base.html' %}
+
+{% block title %}Home - Blog Website{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center mb-5">Latest Blog Posts</h1>
+    
+    <div class="row">
+        {% for post in posts %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card post-card h-100">
+                {% if post.image %}
+                <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}" style="height: 200px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ post.title }}</h5>
+                    <p class="card-text text-muted">
+                        <small>
+                            By {{ post.author.username }} on {{ post.date_posted|date:"F d, Y" }}
+                        </small>
+                    </p>
+                    <p class="card-text">{{ post.content|truncatewords:30 }}</p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'post-detail' post.pk %}" class="btn btn-primary">Read More</a>
+                        <div>
+                            <span class="text-muted">
+                                <i class="fas fa-heart"></i> {{ post.total_likes }}
+                            </span>
+                            <span class="text-muted ms-3">
+                                <i class="fas fa-comments"></i> {{ post.comments.count }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                No posts available yet. Be the first to create a post!
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add animation to cards when they come into view
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = 1;
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    });
+
+    document.querySelectorAll('.post-card').forEach((card) => {
+        card.style.opacity = 0;
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.5s ease-out';
+        observer.observe(card);
+    });
+</script>
+{% endblock %} 

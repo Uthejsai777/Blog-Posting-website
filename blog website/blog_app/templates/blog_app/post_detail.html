@@ -1,0 +1,110 @@
+{% extends 'blog_app/base.html' %}
+
+{% block title %}{{ post.title }} - Blog Website{% endblock %}
+
+{% block content %}
+<div class="container">
+    <article class="blog-post">
+        <div class="card mb-4">
+            {% if post.image %}
+            <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}" style="max-height: 500px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h1 class="card-title">{{ post.title }}</h1>
+                <p class="text-muted">
+                    By {{ post.author.username }} on {{ post.date_posted|date:"F d, Y" }}
+                </p>
+                <div class="card-text">
+                    {{ post.content|linebreaks }}
+                </div>
+                {% if post.video %}
+                <div class="mt-4">
+                    <video class="w-100" controls>
+                        <source src="{{ post.video.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    {% if user.is_authenticated %}
+                    <form action="{% url 'like-post' post.pk %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-heart"></i> {{ post.total_likes }}
+                        </button>
+                    </form>
+                    {% if user == post.author %}
+                    <div>
+                        <a href="{% url 'update-post' post.pk %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'delete-post' post.pk %}" class="btn btn-outline-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-heart"></i> {{ post.total_likes }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="comments-section mt-5">
+            <h3>Comments ({{ post.comments.count }})</h3>
+            
+            {% if user.is_authenticated %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="POST" action="{% url 'add-comment' post.pk %}">
+                        {% csrf_token %}
+                        {{ comment_form.as_p }}
+                        <button type="submit" class="btn btn-primary">Post Comment</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                Please <a href="{% url 'login' %}">login</a> to leave a comment.
+            </div>
+            {% endif %}
+
+            {% for comment in post.comments.all %}
+            <div class="card mb-3 comment-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            {{ comment.author.username }}
+                        </h6>
+                        <small class="text-muted">
+                            {{ comment.date_posted|date:"F d, Y" }}
+                        </small>
+                    </div>
+                    <p class="card-text">{{ comment.content }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">
+                No comments yet. Be the first to comment!
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .comment-card {
+        transition: transform 0.2s;
+    }
+    .comment-card:hover {
+        transform: translateX(10px);
+    }
+</style>
+{% endblock %} 
