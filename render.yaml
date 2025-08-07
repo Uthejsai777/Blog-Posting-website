@@ -1,12 +1,15 @@
 services:
   - type: web
-    name: blog-django
+    name: blog-posting-website
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn blog_project.wsgi
-    plan: free
-    autoDeploy: true
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: blog_project.settings
-      # Add DJANGO_SECRET_KEY (and other secrets) in your Render dashboard
+      - key: SECRET_KEY
+        value: "your-production-secret-key-here"
+      - key: ALLOWED_HOSTS
+        value: "yourdomain.onrender.com"
+      - key: DEBUG
+        value: "False"
